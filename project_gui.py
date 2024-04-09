@@ -3,7 +3,7 @@ import threading
 import queue
 import time
 
-def update_textbox(q):
+def update_textbox(q): # if the queue of messages are not full
     while True:
         if not q.empty():
             message = q.get()
@@ -15,8 +15,8 @@ def update_textbox(q):
 
 def run_gui(message_queue):
     global root
-    root = tk.Tk()
-    root.title("Non-blocking Text Box Example")
+    root = tk.Tk() # main window of the gui
+    root.title("Chat") # title of the gui
 
     global text_box
     text_box = tk.Text(root)
