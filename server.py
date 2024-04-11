@@ -12,7 +12,7 @@ from dbtools import *
 from common import *
 from project_gui import *
 
-connections_map = {}
+connections_map = {} # dictionary in order to keep track of the client's connections
 
 
 # thread function for client
@@ -22,7 +22,7 @@ def threaded(client_socket, mydb_db):
 		message_queue = queue.Queue() # we use queue in order to organize the messages 
 		gui_thread = threading.Thread (target=run_gui, args = (message_queue,))
 		gui_thread.start()
-		msg = client_socket.recv(1024).decode("ascii") # recieve client's message
+		msg = str(rsa_decrypt_msg(client_socket.recv(256)))[2:-1] # recieve client's message
 		message_queue.put("____"+ msg) # put the message in the queue
 		(first_id, second_id )= msg.split(",") # splits the tupple in order to access the variables
 		connections_map.update({first_id : client_socket}) # puts the first id as the key for the client socket, allows the server to keep track of each client's connection
@@ -38,21 +38,21 @@ def threaded(client_socket, mydb_db):
 		second_socket = connections_map[second_id] # add second id's connection as second socket to the dictionary
 		print(connections_map)
 		print ("____", first_id, second_id)
-		client_socket.send("please_start".encode("ascii"))
+		client_socket.send(rsa_encrypt_msg("please_start"))
 
 		print("___%%%%____", second_socket)
-		second_socket.send("please_start".encode("ascii"))
+		second_socket.send(rsa_encrypt_msg("please_start"))
 		chat_sockets = [client_socket, second_socket] # chat's connections
 		while(True):
 			ready_read, _, _ = select.select(chat_sockets, chat_sockets, []) # 
 			for sock in ready_read:
-				data = sock.recv(1024).decode("ascii")
+				data = str(rsa_decrypt_msg(sock.recv(256)))[2:-1]
 				print(data)
 				if sock == client_socket:
 					other_sock = second_socket
 				else:
 					other_sock = client_socket
-				other_sock.send(data.encode("ascii"))
+				other_sock.send(rsa_encrypt_msg(data))
 				# note that when change to UI should be shown only once for each couple
 				message_queue.put(data)
 

@@ -9,7 +9,7 @@ demo_write = ["aaaa", "bbb", "ccc"]
 def get_rand_out_of_4_id():
     num = time_now() # number of seconds that passed since January 1, 1970, 00:00:00 UTC
     randomizer = random.randrange(1,4) 
-    return num % randomizer   
+    return num % randomizer
 
 def send_to_server_both_ids(server_socket):
     # message from server with 2 different ids
@@ -28,10 +28,10 @@ def Main():
     server_socket.connect((server_ip, server_port))
     server_msg = send_to_server_both_ids(server_socket)
      
-    server_socket.send(server_msg.encode("ascii"))
+    server_socket.send(rsa_encrypt_msg(server_msg))
     print("sent to server request to connect with msg : "+ server_msg)     
     
-    response = server_socket.recv(1024).decode('ascii')
+    response = str(rsa_decrypt_msg(server_socket.recv(256)))[2:-1]
     print("got response: ", response)
     if not response.startswith("please_start"):
         print("error")
@@ -40,7 +40,7 @@ def Main():
 
     # now we start writing !
     for i in demo_write:
-        server_socket.send(i.encode("ascii"))
+        server_socket.send(rsa_encrypt_msg(i))
         time.sleep(2)
         # TODO later support quit
     server_socket.close()
