@@ -4,7 +4,7 @@ import random
 from common import *
 import time
 
-demo_write = ["aaaa", "bbb", "ccc"]
+demo_write = ["aaaa", "bbb", "ccc","ddd", "eee", "fff", "ggg", "hhh", "iii"]
 
 def get_rand_out_of_4_id():
     num = time_now() # number of seconds that passed since January 1, 1970, 00:00:00 UTC
@@ -40,7 +40,8 @@ def Main():
 
     # now we start writing !
     for i in demo_write:
-        server_socket.send(rsa_encrypt_msg(i))
+        random_variable = random.choice(demo_write)
+        server_socket.send(rsa_encrypt_msg(random_variable))
         time.sleep(2)
         # TODO later support quit
     server_socket.close()
