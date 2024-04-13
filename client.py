@@ -25,11 +25,10 @@ def Main():
     server_socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 
     # connect to server on local computer
-    server_socket.connect((server_ip, server_port))
-    server_msg = send_to_server_both_ids(server_socket)
-     
-    server_socket.send(rsa_encrypt_msg(server_msg))
-    print("sent to server request to connect with msg : "+ server_msg)     
+    server_socket.connect((server_ip, server_port)) # connect socket to server ip and port
+    server_msg = send_to_server_both_ids(server_socket) # send two client's ids to the server     
+    server_socket.send(rsa_encrypt_msg(server_msg)) # sends the two ids in an encrypted message
+    print("sent to server request to connect with msg : "+ server_msg) 
     
     response = str(rsa_decrypt_msg(server_socket.recv(256)))[2:-1]
     print("got response: ", response)
