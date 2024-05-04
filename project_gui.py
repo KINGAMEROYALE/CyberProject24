@@ -2,10 +2,10 @@ import tkinter as tk
 import threading
 import queue
 import time
+import common
 
 root = ""
 text_box = ""
-entry_field = ""
 
 
 # Function to update the textbox with new messages
@@ -27,16 +27,20 @@ def display_message(message):
     text_box.config(state=tk.DISABLED)
 
 # Function to send a message to the server
-def send_message(entry_field):
+def send_message(entry_field, out_queue):
     message = entry_field.get()
-    if message.strip():  # Check if the message string is not empty after stripping whitespace
-        print("Entry field value:", message)
-        entry_field.delete(0, tk.END)  # Clear the entry field after sending the message
-        
-        return message  # Return the message
+    if (common.shared_vars["connection_status"] == True):
+        if message.strip():  # Check if the message string is not empty after stripping whitespace
+            print("Entry field value:", message)
+            out_queue.put(message)
+            display_message(out_queue.get())
+            entry_field.delete(0, tk.END)  # Clear the entry field after sending the message
+            return message  # Return the message
+        else:
+            print("Entry field is empty!")
+            return ""
     else:
-        print("Entry field is empty!")
-        return ""
+        print("There is no connection between the clients yet.")
 
 
 # Function to close the chat window
@@ -44,7 +48,7 @@ def close_chat():
     root.destroy()
 
 # Function to run the GUI
-def run_gui(message_queue):
+def run_gui(message_queue, out_queue):
     global root
     global text_box
     root = tk.Tk()
@@ -57,9 +61,9 @@ def run_gui(message_queue):
     # Entry field for typing messages
     entry_field = tk.Entry(root)
     entry_field.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)  # Adjusted to fill both horizontally and vertically
-
+    
     # Send button
-    send_button = tk.Button(root, text="Send", command=lambda: send_message(entry_field)) # lamboda is the result of the funtion
+    send_button = tk.Button(root, text="Send", command=lambda: send_message(entry_field, out_queue)) # lamboda is the result of the funtion
     send_button.pack(side=tk.RIGHT, fill=tk.Y)  # Adjusted to fill vertically
 
     # Close button

@@ -4,7 +4,7 @@ import time
 import select
 import queue
 import tkinter as tk
-
+import common
 
 # import thread module
 from _thread import *
@@ -13,23 +13,26 @@ from dbtools import *
 from common import *
 from project_gui import run_gui
 from project_gui import update_textbox
-
+from project_gui import display_message
 connections_map = {} # dictionary in order to keep track of the client's connections
 
 # thread function for client
 
-def threaded(client_socket, mydb_db):
+
+def threaded(client_socket, mydb_d, encryptObj):
+    encryptObj = Encryption()
     message_queue = queue.Queue() # we use queue in order to organize the messages
-    gui_thread = threading.Thread (target=run_gui, args = (message_queue,))
-    gui_thread.start()
-    msg = str(rsa_decrypt_msg(client_socket.recv(256)))[2:-1] # receive client's message
+    out_queue = queue.Queue() # we use queue in order to read the messages from ui
+    gui_thread = threading.Thread (target=run_gui, args = (message_queue, out_queue)) # creates a new thread object that run the GUI
+    gui_thread.start() # we launch the GUI
+    msg = str(encryptObj.rsa_decrypt_msg(client_socket.recv(256)))[2:-1] # receive client's message
     message_queue.put("____"+ msg) # put the message in the queue
     (first_id, second_id )= msg.split(",") # splits the tupple in order to access the variables
     connections_map.update({first_id : client_socket}) # puts the first id as the key for the client socket, allows the server to keep track of each client's connection
-    while(second_id not in connections_map.keys()):
+    while(second_id not in connections_map.keys()): # while the connection between the clients is still unavailable we keep on waiting before proceeding
         event = threading.Event()
         event.wait(5)  # Wait for the second client to connect
-
+    common.shared_vars["connection_status"] = True
     message_queue.put("now we have a connection")
     client_socket.setblocking(False) # server starts receiving data from now on
     client_socket.settimeout(3)
@@ -37,24 +40,26 @@ def threaded(client_socket, mydb_db):
     second_socket = connections_map[second_id] # add second id's connection as second socket to the dictionary
     print(connections_map)
     print ("____", first_id, second_id)
-    client_socket.send(rsa_encrypt_msg("please_start"))
+    client_socket.send(encryptObj.rsa_encrypt_msg("please_start")) # let the first client know that the connection has started
 
 
     print("___%%%%____", second_socket)
-    second_socket.send(rsa_encrypt_msg("please_start"))
+    second_socket.send(encryptObj.rsa_encrypt_msg("please_start")) # let the second client know that the connection has started
     chat_sockets = [client_socket, second_socket] # chat's connections
     while True: # while the connection is available
-        ready_read, _, _ = select.select(chat_sockets, chat_sockets, []) 
-        for sock in ready_read:
-            data = str(rsa_decrypt_msg(sock.recv(256)))[2:-1]
-            print(data)
-            if sock == client_socket:
-                other_sock = second_socket
-            else:
-                other_sock = client_socket
-            other_sock.send(rsa_encrypt_msg(data))
+        if not out_queue.empty(): # if there is still more 
+            # todo send-all
+            ready_read, _, _ = select.select(chat_sockets, chat_sockets, []) 
+            for sock in ready_read:
+                data = str(encryptObj.rsa_decrypt_msg(sock.recv(256)))[2:-1]
+                print(data)
+                if sock == client_socket:
+                    other_sock = second_socket
+                else:
+                    other_sock = client_socket
+                other_sock.send(encryptObj.rsa_encrypt_msg(data))
             # note that when change to UI should be shown only once for each couple
-            message_queue.put(data)
+                message_queue.put(data)
     # data received from client
         
     # connection closed
@@ -81,7 +86,8 @@ def create_tables(mydb_db): # create all of the tables
                 "(id VARCHAR(255), senderid INT, receivedid INT, objtype VARCHAR(255), objid INT, date DATE)")
     tables = show_tables(mydb_db)
 
-def Main():
+def main():
+    encryptObj  = Encryption()
     mydb_db = initialize_db() # creates a database and puts mydb_db as a connection argument for it
     create_tables(mydb_db) # creates the tables from the given database
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # socket(adress family of the socket and ip, connection type)
@@ -95,18 +101,11 @@ def Main():
     while True:
         # establish connection with client
         c, addr = s.accept()
-
         print('Connected to :', addr[0], ':', addr[1])
         # Start a new thread and return its identifier
-        start_new_thread(threaded, (c,mydb_db,))
+        start_new_thread(threaded, (c, mydb_db, encryptObj,))
     s.close()
 
 
-
-
-
-
-
-
 if __name__ == '__main__':
-    Main()
+    main()

@@ -1,4 +1,5 @@
-import mysql.connector
+import mysql.connector # מטרתו הינה להקל על העבודה מול מסד הנתונים 
+
 def init():
     mydb = mysql.connector.connect(
         host="localhost",
