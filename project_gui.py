@@ -1,12 +1,15 @@
+from PIL import Image, ImageTk
+from tkinter import filedialog
+from common import *
 import tkinter as tk
 import threading
 import queue
 import time
 import common
-
+import socket
 root = ""
 text_box = ""
-
+encryptObj = Encryption()
 
 # Function to update the textbox with new messages
 def update_textbox(q):
@@ -26,6 +29,18 @@ def display_message(message):
     text_box.see(tk.END)
     text_box.config(state=tk.DISABLED)
 
+def display_image(image_path):
+    image = Image.open(image_path)
+    image = image.resize((300, 300), Image.ANTIALIAS)  # Adjust the size as needed
+    photo = ImageTk.PhotoImage(image)
+    text_box.image = photo  # Store the photo as an attribute of the text box widget
+    text_box.image_create(tk.END, image=photo)  # Insert the image into the text box at the end
+    text_box.insert(tk.END, "\n")  # Insert a newline after the image
+    text_box.see(tk.END)  # Scroll to the end of the text box
+
+
+
+
 # Function to send a message to the server
 def send_message(entry_field, out_queue):
     message = entry_field.get()
@@ -41,6 +56,13 @@ def send_message(entry_field, out_queue):
             return ""
     else:
         print("There is no connection between the clients yet.")
+
+
+def select_media():
+    # Ask the user to select a file
+    global file_path
+    file_path = filedialog.askopenfilename()
+    display_image(file_path)
 
 
 # Function to close the chat window
@@ -65,6 +87,9 @@ def run_gui(message_queue, out_queue):
     # Send button
     send_button = tk.Button(root, text="Send", command=lambda: send_message(entry_field, out_queue)) # lamboda is the result of the funtion
     send_button.pack(side=tk.RIGHT, fill=tk.Y)  # Adjusted to fill vertically
+    
+    plus_button = tk.Button(root, text="+", command=select_media)  # Add functionality here
+    plus_button.pack(side=tk.LEFT, fill=tk.Y)  # Adjusted to fill vertically
 
     # Close button
     close_button = tk.Button(root, text="X", bg="red", command=close_chat)

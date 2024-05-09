@@ -5,12 +5,17 @@ from datetime import *
 
 
 
+
+
+
 # TODO : in the future - make this close to be Singleton
 class Encryption:
+
 
     def __init__(self):
         self.pub_key_path = 'C:\\Users\\ניר\\cyberproject24\\pub_key'    
         self.priv_key_path = 'C:\\Users\\ניר\\cyberproject24\\priv_key'
+
 
     # run this once(!)  to create keys, not in ctor!
     def init_once(self):    
@@ -23,7 +28,7 @@ class Encryption:
         public_key = f.write(private_key)
         f.close()
         public_key = key.publickey().exportKey('PEM')
-    
+   
     def rsa_encrypt_msg(self, message):
         message = str.encode(message)
         f = open (self.pub_key_path,"rb")
@@ -33,6 +38,7 @@ class Encryption:
         rsa_public_key = PKCS1_OAEP.new(rsa_public_key)
         encrypted_text = rsa_public_key.encrypt(message)
         return encrypted_text
+
 
     def rsa_decrypt_msg(self, encrypted_text):
         f = open (self.priv_key_path,"rb")
@@ -44,19 +50,19 @@ class Encryption:
         return decrypted_text
 
 
-def time_now():
-
-    # Get the current date and time
-    now = datetime.now()
-
-    # Convert the date and time to an integer using the timestamp() method
-    timestamp = int(now.timestamp())
-    return timestamp
+class Time:
+    def __init__(self):
+        self.timenow = datetime.now()
+   
+    def time(self):
+        timestamp = int(self.timenow.timestamp())
+        return timestamp
 
 
 shared_vars = {
     "connection_status": False
 }
+
 
 get_client_id_msg = "Please enter client ID:"
 server_ip = "127.0.0.1"
