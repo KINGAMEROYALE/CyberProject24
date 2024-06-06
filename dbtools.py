@@ -107,10 +107,12 @@ class Dbfunc:
         else:
             print("No column name with name " + tableName)
 
-    def insert_message(self, message, clientidsent, clientidreceived, date, isseen):
-        mycursor = self.mydb.cursor()
-        sql = "INSERT INTO textmessages (id, clientidsent, clientidreceived, date, isseen) VALUES (%s, %s, %s, %s, %s)"
-        current_date = datetime.now().date()
-        val = (message, clientidsent, clientidreceived, date, isseen)
-        mycursor.execute(sql, val)
-        self.mydb.commit()
+
+# Example usage:
+# db = Dbfunc()
+# db.create_database("mydatabase")
+# db.create_table("mytable", "(id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255), email VARCHAR(255))")
+# db.insert_row("mytable", "(name, email)", "(%s, %s)", ("John", "john@example.com"))
+# rows = db.get_all_rows("mytable")
+# for row in rows:
+#     print(row)

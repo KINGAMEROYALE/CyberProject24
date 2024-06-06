@@ -1,4 +1,3 @@
-# Client
 import socket
 import random
 from common import *
@@ -6,6 +5,7 @@ import time
 import threading
 import os
 import base64
+import queue
 from project_gui import send_message
 
 encryptObj = Encryption()
@@ -14,33 +14,19 @@ timenow = Time()
 
 demo_write = ["aaaa", "bbb", "ccc","ddd", "eee", "fff", "ggg", "hhh", "iii"]
 
-def get_rand_out_of_4_id():
-    num = timenow.time() # number of seconds that passed since January 1, 1970, 00:00:00 UTC
-    randomizer = random.randrange(1,4)
-    return num % randomizer
+def get_client_id():
+    return int(input("Please enter your client ID: "))
+
+def get_friend_id():
+    return int(input("Please enter the client ID you want to connect with: "))
 
 def send_to_server_both_ids(server_socket):
     # message from server with 2 different ids
-    my_id = get_rand_out_of_4_id()
-    friend_id_to_request = get_rand_out_of_4_id()
+    my_id = get_client_id()
+    friend_id_to_request = get_friend_id()
     while (my_id == friend_id_to_request):
-        friend_id_to_request = get_rand_out_of_4_id() # if the ids are the same, change the second id until both are different
+        time.wait(0.1)
     return str(my_id) + "," + str(friend_id_to_request) # send both ids to server
-
-
-
-def receive_from_server(server_socket):
-    while True:
-        try:
-            data = encryptObj.rsa_decrypt_msg(server_socket.recv(256)).decode("utf-8")
-            if data:
-                print("Received from server:", data)  # Print received message for debugging
-                # Display received message in the GUI
-                # For example:
-                # display_message_in_gui(data)
-        except Exception as e:
-            print("Error receiving message from server:", e)
-            break
 
 
 class Client:
@@ -65,11 +51,22 @@ class Client:
             server_socket.close()
             return
 
-
-        receive_thread = threading.Thread(target=receive_from_server, args=(server_socket,))
+        self.message_queue = queue.Queue()  # Create a message queue
+        receive_thread = threading.Thread(target=self.receive_from_server, args=(server_socket,))  # Pass the server_socket to receive_from_server
         receive_thread.start()
+
+
+    def receive_from_server(self, server_socket):
+        while True:
+            try:
+                data = encryptObj.rsa_decrypt_msg(server_socket.recv(256)).decode("utf-8")
+                if data:
+                    print("Received from server:", data)
+                    self.message_queue.put(data)  # Put received data into the message queue
+            except Exception as e:
+                print("Error receiving message from server:", e)
+                break
 
 
 if __name__ == '__main__':
     Client()
-''

@@ -14,6 +14,7 @@ from project_gui import run_gui
 from project_gui import update_textbox
 from project_gui import display_message
 from dbtools import Dbfunc
+from login_gui import LoginGUI
 
 encryptObj = Encryption()
 dbTool = Dbfunc()
@@ -30,7 +31,7 @@ def threaded(client_socket, encryptObj):
     gui_thread = threading.Thread (target=run_gui, args = (message_queue, out_queue)) # creates a new thread object that run the GUI
     gui_thread.start() # we launch the GUI
     msg = str(encryptObj.rsa_decrypt_msg(client_socket.recv(256)))[2:-1] # receive client's message
-    message_queue.put("____"+ msg) # put the message in the queue
+    message_queue.put("__"+ msg) # put the message in the queue
     (first_id, second_id )= msg.split(",") # splits the tupple in order to access the variables
     connections_map.update({first_id : client_socket}) # puts the first id as the key for the client socket, allows the server to keep track of each client's connection
     while(second_id not in connections_map.keys()): # while the connection between the clients is still unavailable we keep on waiting before proceeding
@@ -43,10 +44,10 @@ def threaded(client_socket, encryptObj):
     # TODO(version 2) - probably no need as we show all messages.. tbd later..smth like this: if client_socket > second_socket do nothing and if not - handle chat
     second_socket = connections_map[second_id] # add second id's connection as second socket to the dictionary
     print(connections_map)
-    print ("____", first_id, second_id)
+    print ("__", first_id, second_id)
     client_socket.send(encryptObj.rsa_encrypt_msg("please_start")) # let the first client know that the connection has started
 
-    print("___%%%%____", second_socket,)
+    print("_%%%%__", second_socket,)
     second_socket.send(encryptObj.rsa_encrypt_msg("please_start")) # let the second client know that the connection has started
     chat_sockets = [client_socket, second_socket] # chat's connections
     while True: # while the connection is available
