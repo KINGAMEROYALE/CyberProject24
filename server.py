@@ -27,8 +27,9 @@ mydb_db = None
 # thread function for client
 def threaded(client_socket, encryptObj):
     message_queue = queue.Queue()
+    text_box = ""
     out_queue = queue.Queue() # we use queue in order to read the messages from ui
-    gui_thread = threading.Thread (target=run_gui, args = (message_queue, out_queue)) # creates a new thread object that run the GUI
+    gui_thread = threading.Thread (target=run_gui, args = (message_queue, out_queue, text_box)) # creates a new thread object that run the GUI
     gui_thread.start() # we launch the GUI
     msg = str(encryptObj.rsa_decrypt_msg(client_socket.recv(256)))[2:-1] # receive client's message
     message_queue.put("__"+ msg) # put the message in the queue
@@ -39,6 +40,7 @@ def threaded(client_socket, encryptObj):
         event.wait(5)  # Wait for the second client to connect
     common.shared_vars["connection_status"] = True
     message_queue.put("now we have a connection")
+    print("\n\n\nnow we have a connection", message_queue)
     client_socket.setblocking(False) # server starts receiving data from now on
     client_socket.settimeout(3)
     # TODO(version 2) - probably no need as we show all messages.. tbd later..smth like this: if client_socket > second_socket do nothing and if not - handle chat

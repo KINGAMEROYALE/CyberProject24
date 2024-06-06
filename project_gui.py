@@ -8,20 +8,20 @@ import time
 import common
 import socket
 root = ""
-text_box = ""
 encryptObj = Encryption()
 
 # Function to update the textbox with new messages
-def update_textbox(q):
+def update_textbox(q, text_box):
     while True:
         if not q.empty():
+            print("------getting____", q)
             message = q.get()
-            display_message(message)
+            display_message(message, text_box)
         root.update_idletasks()
         time.sleep(0.1)
 
 # Function to display a message in the textbox
-def display_message(message):
+def display_message(message, text_box):
     text_box.config(state=tk.NORMAL)
     text_box.insert(tk.END, "\n")
     text_box.insert(tk.END, message, "user_message")
@@ -29,7 +29,7 @@ def display_message(message):
     text_box.see(tk.END)
     text_box.config(state=tk.DISABLED)
 
-def display_image(image_path):
+def display_image(image_path, text_box):
     image = Image.open(image_path)
     image = image.resize((300, 300), Image.ANTIALIAS)  # Adjust the size as needed
     photo = ImageTk.PhotoImage(image)
@@ -42,13 +42,13 @@ def display_image(image_path):
 
 
 # Function to send a message to the server
-def send_message(entry_field, out_queue):
+def send_message(entry_field, out_queue, text_box):
     message = entry_field.get()
     if (common.shared_vars["connection_status"] == True):
         if message.strip():  # Check if the message string is not empty after stripping whitespace
             print("Entry field value:", message)
             out_queue.put(message)
-            display_message(out_queue.get())
+            display_message(out_queue.get(), text_box)
             entry_field.delete(0, tk.END)  # Clear the entry field after sending the message
             return message  # Return the message
         else:
@@ -58,11 +58,11 @@ def send_message(entry_field, out_queue):
         print("There is no connection between the clients yet.")
 
 
-def select_media():
+def select_media(text_box):
     # Ask the user to select a file
     global file_path
     file_path = filedialog.askopenfilename()
-    display_image(file_path)
+    display_image(file_path, text_box)
 
 
 # Function to close the chat window
@@ -70,9 +70,8 @@ def close_chat():
     root.destroy()
 
 # Function to run the GUI
-def run_gui(message_queue, out_queue):
+def run_gui(message_queue, out_queue, text_box):
     global root
-    global text_box
     root = tk.Tk()
     root.title("Chat")
 
@@ -85,10 +84,10 @@ def run_gui(message_queue, out_queue):
     entry_field.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)  # Adjusted to fill both horizontally and vertically
     
     # Send button
-    send_button = tk.Button(root, text="Send", command=lambda: send_message(entry_field, out_queue)) # lamboda is the result of the funtion
+    send_button = tk.Button(root, text="Send", command=lambda: send_message(entry_field, out_queue, text_box)) # lamboda is the result of the funtion
     send_button.pack(side=tk.RIGHT, fill=tk.Y)  # Adjusted to fill vertically
     
-    plus_button = tk.Button(root, text="+", command=select_media)  # Add functionality here
+    plus_button = tk.Button(root, text="+", command=lambda: select_media(text_box))  # Add functionality here
     plus_button.pack(side=tk.LEFT, fill=tk.Y)  # Adjusted to fill vertically
 
     # Close button
@@ -102,7 +101,7 @@ def run_gui(message_queue, out_queue):
     text_box.tag_configure("user_message", justify="right", background="lightblue", relief=tk.RAISED, wrap=tk.WORD)
 
     # Thread to update the textbox
-    update_thread = threading.Thread(target=update_textbox, args=(message_queue,), daemon=True)
+    update_thread = threading.Thread(target=update_textbox, args=(message_queue, text_box,), daemon=True)
     update_thread.start()
 
     root.mainloop()
