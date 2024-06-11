@@ -116,3 +116,6 @@ class Dbfunc:
 # rows = db.get_all_rows("mytable")
 # for row in rows:
 #     print(row)
+
+
+

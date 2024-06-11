@@ -16,6 +16,7 @@ from project_gui import display_message
 from dbtools import Dbfunc
 from login_gui import LoginGUI
 
+ipadrs = []
 encryptObj = Encryption()
 dbTool = Dbfunc()
 connections_map = {} # dictionary in order to keep track of the client's connections
@@ -27,9 +28,8 @@ mydb_db = None
 # thread function for client
 def threaded(client_socket, encryptObj):
     message_queue = queue.Queue()
-    text_box = ""
     out_queue = queue.Queue() # we use queue in order to read the messages from ui
-    gui_thread = threading.Thread (target=run_gui, args = (message_queue, out_queue, text_box)) # creates a new thread object that run the GUI
+    gui_thread = threading.Thread(target=run_gui, args = (message_queue, out_queue, client_socket)) # creates a new thread object that run the GUI
     gui_thread.start() # we launch the GUI
     msg = str(encryptObj.rsa_decrypt_msg(client_socket.recv(256)))[2:-1] # receive client's message
     message_queue.put("__"+ msg) # put the message in the queue
@@ -47,10 +47,9 @@ def threaded(client_socket, encryptObj):
     second_socket = connections_map[second_id] # add second id's connection as second socket to the dictionary
     print(connections_map)
     print ("__", first_id, second_id)
-    client_socket.send(encryptObj.rsa_encrypt_msg("please_start")) # let the first client know that the connection has started
-
+    client_socket.send(encryptObj.rsa_encrypt_msg("now we have a connection")) # let the first client know that the connection has started
     print("_%%%%__", second_socket,)
-    second_socket.send(encryptObj.rsa_encrypt_msg("please_start")) # let the second client know that the connection has started
+    second_socket.send(encryptObj.rsa_encrypt_msg("now we have a connection")) # let the second client know that the connection has started
     chat_sockets = [client_socket, second_socket] # chat's connections
     while True: # while the connection is available
         if not out_queue.empty(): # if there is still more
@@ -73,8 +72,6 @@ def threaded(client_socket, encryptObj):
     connections_map.popitem(first_id) # removes the client connection from the dictionary when the chat ends
 
 
-
-
 def initialize_db(): # the funtion that starts the database
     global mydb_db
     mydb = dbTool.init()
@@ -82,8 +79,6 @@ def initialize_db(): # the funtion that starts the database
     dbs = dbTool.show_databases()    
     mydb_db = dbTool.init_with_db("mysql") # takes the variable as an argument for connection with "mysql" database
     return mydb_db # returns the argument that connects to the database
-
-
 
 
 def create_tables(mydb_db): # create all of the tables
@@ -114,8 +109,16 @@ class Server:
             # establish connection with client
             c, addr = s.accept()
             print('Connected to :', addr[0], ':', addr[1])
-            # Start a new thread and return its identifier
-            start_new_thread(threaded, (c, encryptObj,))
+            if (addr in ipadrs and addr != server_ip):
+                print("might be ddos")
+            else:
+                if (addr != server_ip):
+                    ipadrs.append(addr)
+                # Start a new thread and return its identifier
+                start_new_thread(threaded, (c, encryptObj,))
+                if (addr != server_ip):
+                    ipadrs.remove(addr)
+            
         s.close()
 
 

@@ -1,29 +1,28 @@
 import tkinter as tk
 
 class LoginGUI:
-    def __init__(self, login_callback):
-        self.login_callback = login_callback
+    def __init__(self, master, on_submit):
+        self.master = master
+        self.master.title("Login")
+        self.on_submit = on_submit
 
-        self.root = tk.Tk()
-        self.root.title("Login")
+        self.client_id_label = tk.Label(master, text="Client ID")
+        self.client_id_label.pack()
 
-        self.client_id_label = tk.Label(self.root, text="Client ID:")
-        self.client_id_label.grid(row=0, column=0, padx=10, pady=5)
-        self.client_id_entry = tk.Entry(self.root)
-        self.client_id_entry.grid(row=0, column=1, padx=10, pady=5)
+        self.client_id_entry = tk.Entry(master)
+        self.client_id_entry.pack()
 
-        self.friend_id_label = tk.Label(self.root, text="Friend ID:")
-        self.friend_id_label.grid(row=1, column=0, padx=10, pady=5)
-        self.friend_id_entry = tk.Entry(self.root)
-        self.friend_id_entry.grid(row=1, column=1, padx=10, pady=5)
+        self.friend_id_label = tk.Label(master, text="Friend ID")
+        self.friend_id_label.pack()
 
-        self.login_button = tk.Button(self.root, text="Login", command=self.login)
-        self.login_button.grid(row=2, columnspan=2, padx=10, pady=10)
+        self.friend_id_entry = tk.Entry(master)
+        self.friend_id_entry.pack()
 
-        self.root.mainloop()
+        self.submit_button = tk.Button(master, text="Submit", command=self.submit)
+        self.submit_button.pack()
 
-    def login(self):
+    def submit(self):
         client_id = self.client_id_entry.get()
         friend_id = self.friend_id_entry.get()
-        self.login_callback(client_id, friend_id)
-        self.root.destroy()
+        self.master.destroy()
+        self.on_submit(client_id, friend_id)
